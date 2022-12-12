@@ -12,5 +12,5 @@ require('./routes/dialogFlowRoutes')(app);
 
 
 const PORT = process.env.PORT ;
-
+console.log("server is up and running")
 app.listen(PORT);
