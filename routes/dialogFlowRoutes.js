@@ -1,11 +1,4 @@
-const dialogflow = require('@google-cloud/dialogflow');
-
-const sessionClient = new dialogflow.SessionsClient();
-
-const sessionPath = sessionClient.projectAgentSessionPath(
-    process.env.PROJECTID,
-    process.env.SESSION_ID
-  );
+const chatbot = require('../chatbot/chatbot');
 
 module.exports = app => {
 
@@ -17,18 +10,12 @@ module.exports = app => {
 
     app.post('/api/text', async (req, res) => {
 
-        const request = {
-            session: sessionPath,
-            queryInput: {
-                text: {
-                    text: req.body.text,
-                    languageCode: process.env.LANGUAGE_CODE
-                }
-            }
-        };
-        let responses = await sessionClient
-            .detectIntent(request);
+        let responses = await chatbot.textQuery(req.body.text, req.body.parameters);
+        res.send(responses[0].queryResult);
+    });
 
-        res.send(responses[0].queryResult)
+    app.post('/api/event', async (req, res) => {
+        let responses = await chatbot.eventQuery(req.body.event, req.body.parameters);
+        res.send(responses[0].queryResult);
     });
 }
