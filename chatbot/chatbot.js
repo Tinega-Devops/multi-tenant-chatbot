@@ -15,15 +15,17 @@ const sessionPath = sessionClient.projectAgentSessionPath(
     process.env.SESSION_ID
   );
 
-module.exports = {
-    textQuery: async function(text, parameters = {}) {
+  module.exports = {
+    textQuery: async function(text, userID, parameters = {}) {
         let self = module.exports;
+        const sessionPath = sessionClient.projectAgentSessionPath(process.env.PROJECTID, process.env.SESSION_ID + userID);
+
         const request = {
             session: sessionPath,
             queryInput: {
                 text: {
                     text: text,
-                    languageCode:process.env.LANGUAGE_CODE ,
+                    languageCode: process.env.LANGUAGE_CODE,
                 },
             },
             queryParams: {
@@ -32,17 +34,16 @@ module.exports = {
                 }
             }
         };
-
         let responses = await sessionClient.detectIntent(request);
         responses = await self.handleAction(responses);
         return responses;
 
-
-
     },
 
-    eventQuery: async function(event, parameters = {}) {
+    eventQuery: async function(event, userID,  parameters = {}) {
         let self = module.exports;
+        let sessionPath = sessionClient.projectAgentSessionPath(process.env.PROJECTID, process.env.SESSION_ID + userID);
+
         const request = {
             session: sessionPath,
             queryInput: {
@@ -53,16 +54,11 @@ module.exports = {
                 },
             }
         };
-
         let responses = await sessionClient.detectIntent(request);
         responses = await self.handleAction(responses);
         return responses;
-
     },
-
     handleAction: function(responses){
         return responses;
     },
-
-
 }
