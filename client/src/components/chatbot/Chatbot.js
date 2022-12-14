@@ -20,42 +20,98 @@ class Chatbot extends Component {
         this.state = {
             messages: [],
             showBot: true,
-            shopWelcomeSent: false
+            shopWelcomeSent: false,
+            clientToken: false,
+            regenerateToken: 0
         };
         if (cookies.get('userID') === undefined) {
             cookies.set('userID', uuid(), { path: '/' });
         }
     }
-    async df_text_query (queryText) {
+    async df_text_query(text) {
         let says = {
             speaks: 'user',
             msg: {
                 text : {
-                    text: queryText
+                    text: text
                 }
             }
         }
         this.setState({ messages: [...this.state.messages, says]});
-        const res = await axios.post('/api/text',  {text: queryText, userID: cookies.get('userID')});
-        for (let msg of res.data.fulfillmentMessages) {
-            says = {
-                speaks: 'bot',
-                msg: msg
+        const request = {
+            queryInput: {
+                text: {
+                    text: text,
+                    languageCode: 'en-US',
+                },
             }
-            this.setState({ messages: [...this.state.messages, says]});
-        }
+        };
+        await this.df_client_call(request);
     };
-    async df_event_query(eventName) {
-        const res = await axios.post('/api/event',  {event: eventName, userID: cookies.get('userID')});
-        for (let msg of res.data.fulfillmentMessages) {
-            let says = {
-                speaks: 'bot',
-                msg: msg
+    async df_event_query(event) {
+        const request = {
+            queryInput: {
+                event: {
+                    name: event,
+                    languageCode: 'en-US',
+                },
             }
-            this.setState({ messages: [...this.state.messages, says]});
-        }
+        };
+        await this.df_client_call(request);
     };
+    async df_client_call(request) {
 
+        try {
+
+            if (this.state.clientToken === false) {
+                const res = await axios.get('/api/get_client_token');
+                this.setState({clientToken: res.data.token});
+            }
+
+            var config = {
+                headers: {
+                    'Authorization': "Bearer " + this.state.clientToken,
+                    'Content-Type': 'application/json; charset=utf-8'
+                }
+            };
+            const res = await axios.post(
+                'https://dialogflow.googleapis.com/v2/projects/' + process.env.REACT_APP_GOOGLE_PROJECT_ID +
+                '/agent/sessions/' + process.env.REACT_APP_DF_SESSION_ID + cookies.get('userID') + ':detectIntent',
+                request,
+                config
+            );
+            let  says = {};
+            if (res.data.queryResult.fulfillmentMessages ) {
+                for (let msg of res.data.queryResult.fulfillmentMessages) {
+                    says = {
+                        speaks: 'bot',
+                        msg: msg
+                    }
+                    this.setState({ messages: [...this.state.messages, says]});
+                }
+            }
+        } catch (e) {
+            if (e.response.status === 401 && this.state.regenerateToken < 1) {
+                this.setState({ clientToken: false, regenerateToken: 1 });
+                this.df_client_call(request);
+            }
+            else {
+                let says = {
+                    speaks: 'bot',
+                    msg: {
+                        text : {
+                            text: "I'm having troubles. I need to terminate. will be back later"}
+                    }
+                }
+                this.setState({ messages: [...this.state.messages, says]});
+                let that = this;
+                setTimeout(function(){
+                    that.setState({ showBot: false})
+                }, 2000);
+            }
+        }
+
+    }
     resolveAfterXSeconds(x) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -63,10 +119,8 @@ class Chatbot extends Component {
             }, x * 1000);
         })
     }
-
     async componentDidMount() {
         this.df_event_query('Welcome');
-
         if (window.location.pathname === '/shop' && !this.state.shopWelcomeSent) {
             await this.resolveAfterXSeconds(1);
             this.df_event_query('WELCOME_SHOP');
@@ -111,12 +165,14 @@ class Chatbot extends Component {
         }
     }
     renderCards(cards) {
-        return cards.map((card, i) => <Card key={i} payload={card.structValue}/>);
+        return cards.map((card, i) => <Card key={i} payload={card}/>);
     }
     renderOneMessage(message, i) {
         if (message.msg && message.msg.text && message.msg.text.text) {
             return <Message key={i} speaks={message.speaks} text={message.msg.text.text}/>;
-        } else if (message.msg && message.msg.payload.fields.cards) { //message.msg.payload.fields.cards.listValue.values
+        } else if (message.msg
+            && message.msg.payload
+            && message.msg.payload.cards) { //message.msg.payload.fields.cards.listValue.values
             return <div key={i}>
                 <div className="card-panel grey lighten-5 z-depth-1">
                     <div style={{overflow: 'hidden'}}>
@@ -124,8 +180,8 @@ class Chatbot extends Component {
                             <a href="/" className="btn-floating btn-large waves-effect waves-light red">{message.speaks}</a>
                         </div>
                         <div style={{ overflow: 'auto', overflowY: 'scroll'}}>
-                            <div style={{ height: 300, width:message.msg.payload.fields.cards.listValue.values.length * 270}}>
-                                {this.renderCards(message.msg.payload.fields.cards.listValue.values)}
+                            <div style={{ height: 300, width:message.msg.payload.cards.length * 270}}>
+                                {this.renderCards(message.msg.payload.cards)}
                             </div>
                         </div>
                     </div>
@@ -133,15 +189,14 @@ class Chatbot extends Component {
             </div>
         } else if (message.msg &&
             message.msg.payload &&
-            message.msg.payload.fields &&
-            message.msg.payload.fields.quick_replies
+            message.msg.payload.quick_replies
         ) {
             return <QuickReplies
-                text={message.msg.payload.fields.text ? message.msg.payload.fields.text : null}
+                text={message.msg.payload.text ? message.msg.payload.text : null}
                 key={i}
                 replyClick={this._handleQuickReplyPayload}
                 speaks={message.speaks}
-                payload={message.msg.payload.fields.quick_replies.listValue.values}/>;
+                payload={message.msg.payload.quick_replies}/>;
         }
     }
     renderMessages(returnedMessages) {
@@ -163,7 +218,7 @@ class Chatbot extends Component {
     render() {
         if (this.state.showBot) {
             return (
-                <div style={{ minHeight: 500, maxHeight: 500, width:400, position: 'absolute', bottom: 0, right: 0, border: '1px solid lightgray'}}>
+                <div style={{ minHeight: 500, maxHeight: 470, width:400, position: 'absolute', bottom: 0, right: 0, border: '1px solid lightgray'}}>
                     <nav>
                         <div className="nav-wrapper">
                             <a href="/" className="brand-logo">ChatBot</a>
