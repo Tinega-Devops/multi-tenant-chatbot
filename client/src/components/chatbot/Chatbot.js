@@ -1,20 +1,28 @@
+
+
 import React, { Component } from 'react';
 import axios from "axios";
 import { withRouter } from 'react-router-dom';
+
 import Cookies from 'universal-cookie';
 import { v4 as uuid } from 'uuid';
+
 import Message from './Message';
 import Card from './Card';
 import QuickReplies from './QuickReplies';
+
 const cookies = new Cookies();
+
 class Chatbot extends Component {
     messagesEnd;
     talkInput;
+
     constructor(props) {
         super(props);
         // This binding is necessary to make `this` work in the callback
         this._handleInputKeyPress = this._handleInputKeyPress.bind(this);
         this._handleQuickReplyPayload = this._handleQuickReplyPayload.bind(this);
+
         this.hide = this.hide.bind(this);
         this.show = this.show.bind(this);
         this.state = {
@@ -28,6 +36,7 @@ class Chatbot extends Component {
             cookies.set('userID', uuid(), { path: '/' });
         }
     }
+
     async df_text_query(text) {
         let says = {
             speaks: 'user',
@@ -48,7 +57,11 @@ class Chatbot extends Component {
         };
         await this.df_client_call(request);
     };
+
+
+
     async df_event_query(event) {
+
         const request = {
             queryInput: {
                 event: {
@@ -57,8 +70,11 @@ class Chatbot extends Component {
                 },
             }
         };
+
         await this.df_client_call(request);
+
     };
+
     async df_client_call(request) {
 
         try {
@@ -74,13 +90,17 @@ class Chatbot extends Component {
                     'Content-Type': 'application/json; charset=utf-8'
                 }
             };
+
+
             const res = await axios.post(
                 'https://dialogflow.googleapis.com/v2/projects/' + process.env.REACT_APP_GOOGLE_PROJECT_ID +
                 '/agent/sessions/' + process.env.REACT_APP_DF_SESSION_ID + cookies.get('userID') + ':detectIntent',
                 request,
                 config
             );
+
             let  says = {};
+
             if (res.data.queryResult.fulfillmentMessages ) {
                 for (let msg of res.data.queryResult.fulfillmentMessages) {
                     says = {
@@ -91,6 +111,7 @@ class Chatbot extends Component {
                 }
             }
         } catch (e) {
+            console.log(e);
             if (e.response.status === 401 && this.state.regenerateToken < 1) {
                 this.setState({ clientToken: false, regenerateToken: 1 });
                 this.df_client_call(request);
@@ -112,6 +133,7 @@ class Chatbot extends Component {
         }
 
     }
+
     resolveAfterXSeconds(x) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -119,13 +141,16 @@ class Chatbot extends Component {
             }, x * 1000);
         })
     }
+
     async componentDidMount() {
         this.df_event_query('Welcome');
+
         if (window.location.pathname === '/shop' && !this.state.shopWelcomeSent) {
             await this.resolveAfterXSeconds(1);
             this.df_event_query('WELCOME_SHOP');
             this.setState({ shopWelcomeSent: true, showBot: true });
         }
+
         this.props.history.listen(() => {
             if (this.props.history.location.pathname === '/shop' && !this.state.shopWelcomeSent) {
                 this.df_event_query('WELCOME_SHOP');
@@ -133,25 +158,30 @@ class Chatbot extends Component {
             }
         });
     }
+
     componentDidUpdate() {
         this.messagesEnd.scrollIntoView({ behavior: "smooth" });
         if ( this.talkInput ) {
             this.talkInput.focus();
         }
     }
+
     show(event) {
         event.preventDefault();
         event.stopPropagation();
         this.setState({showBot: true});
     }
+
     hide(event) {
         event.preventDefault();
         event.stopPropagation();
         this.setState({showBot: true});
     }
+
     _handleQuickReplyPayload(event, payload, text) {
         event.preventDefault();
         event.stopPropagation();
+
         switch (payload) {
             case 'recommended_yes':
                 this.df_event_query('SHOW_RECOMMENDATIONS');
@@ -164,15 +194,20 @@ class Chatbot extends Component {
                 break;
         }
     }
+
     renderCards(cards) {
         return cards.map((card, i) => <Card key={i} payload={card}/>);
     }
+
     renderOneMessage(message, i) {
+
         if (message.msg && message.msg.text && message.msg.text.text) {
             return <Message key={i} speaks={message.speaks} text={message.msg.text.text}/>;
+
         } else if (message.msg
             && message.msg.payload
             && message.msg.payload.cards) { //message.msg.payload.fields.cards.listValue.values
+
             return <div key={i}>
                 <div className="card-panel grey lighten-5 z-depth-1">
                     <div style={{overflow: 'hidden'}}>
@@ -199,6 +234,7 @@ class Chatbot extends Component {
                 payload={message.msg.payload.quick_replies}/>;
         }
     }
+
     renderMessages(returnedMessages) {
         if (returnedMessages) {
             return returnedMessages.map((message, i) => {
@@ -209,12 +245,14 @@ class Chatbot extends Component {
             return null;
         }
     }
+
     _handleInputKeyPress(e) {
         if (e.key === 'Enter') {
             this.df_text_query(e.target.value);
             e.target.value = '';
         }
     }
+
     render() {
         if (this.state.showBot) {
             return (
@@ -227,7 +265,9 @@ class Chatbot extends Component {
                             </ul>
                         </div>
                     </nav>
+
                     <div id="chatbot"  style={{ minHeight: 388, maxHeight: 388, width:'100%', overflow: 'auto'}}>
+
                         {this.renderMessages(this.state.messages)}
                         <div ref={(el) => { this.messagesEnd = el; }}
                              style={{ float:"left", clear: "both" }}>
@@ -236,6 +276,7 @@ class Chatbot extends Component {
                     <div className=" col s12" >
                         <input style={{margin: 0, paddingLeft: '1%', paddingRight: '1%', width: '98%'}} ref={(input) => { this.talkInput = input; }} placeholder="type a message:"  onKeyPress={this._handleInputKeyPress} id="user_says" type="text" />
                     </div>
+
                 </div>
             );
         } else {
@@ -257,4 +298,5 @@ class Chatbot extends Component {
         }
     }
 }
+
 export default withRouter(Chatbot);
