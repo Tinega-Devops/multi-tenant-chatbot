@@ -1,22 +1,53 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-require('dotenv').config()
-//dotenv.config()
+const bodyParser = require('body-parser');
+const cors = require('cors');
+require('dotenv').config();
+
+
+
 
 const app = express();
 const config = process.env.MONGODB_URI;
 
 mongoose.set('strictQuery', true);
-mongoose.connect(config, { useNewUrlParser: true });
+mongoose.connect(config, { useNewUrlParser: true })
+.then(()=>console.log("successfully connected to Database"))
+.catch((err) => console.log("DB Error => ", err));
+
+/** Swagger Initialization - START */
+const swaggerOption = {
+    swaggerDefinition: (swaggerJsdoc.Options = {
+      info: {
+        title: "Mult Tenant Chatbot ",
+        description: "API documentation",
+        contact: {
+          name: "Developer",
+        },
+        servers: ["http://localhost:8000/api"],
+      },
+    }),
+    apis: ["index.js", "./routes/*.js"],
+  };
+  
+  const swaggerDocs = swaggerJsdoc(swaggerOption);
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+  /** Swagger Initialization - END */
+  
 
 require('./models/Registration');
 require('./models/Demand');
 require('./models/Coupons');
 
-app.use(morgan('tiny'))
+// middlewares
+app.use(morgan('dev'));
 app.use(bodyParser.json());
+app.use(cors());
+
 
 
 require('./routes/dialogFlowRoutes')(app);

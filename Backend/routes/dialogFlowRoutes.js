@@ -1,4 +1,5 @@
-const chatbot = require('../chatbot');
+const chatbot = require('../chatbot/chatbot');
+
 
 module.exports = app => {
 
