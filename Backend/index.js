@@ -39,9 +39,8 @@ const swaggerOption = {
   /** Swagger Initialization - END */
   
 
-require('./models/Registration');
-require('./models/Demand');
-require('./models/Coupons');
+require('./models/order');
+
 
 // middlewares
 app.use(morgan('dev'));

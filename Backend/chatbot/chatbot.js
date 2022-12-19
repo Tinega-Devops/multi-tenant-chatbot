@@ -17,7 +17,6 @@ const sessionPath = sessionClient.projectAgentSessionPath(
     process.env.SESSION_ID
   );
 
-  const Registration = mongoose.model('registration');
 
   module.exports = {
 
@@ -81,15 +80,15 @@ const sessionPath = sessionClient.projectAgentSessionPath(
     handleAction: function(responses){
         let queryResult = responses[0].queryResult;
 
-        switch (queryResult.action) {
-            case 'recommendcourses-yes':
-                if (queryResult.allRequiredParamsPresent) {
+        // switch (queryResult.action) {
+        //     case 'recommendcourses-yes':
+        //         if (queryResult.allRequiredParamsPresent) {
 
-                    self.saveRegistration(queryResult.parameters.fields);
+        //             self.saveRegistration(queryResult.parameters.fields);
 
-                }
-                break;
-        }
+        //         }
+        //         break;
+        // }
 
         // console.log(queryResult.action);
         // console.log(queryResult.allRequiredParamsPresent);
@@ -98,19 +97,5 @@ const sessionPath = sessionClient.projectAgentSessionPath(
         return responses;
     },
 
-    saveRegistration: async function(fields){
-        const registration = new Registration({
-            name: fields.name.stringValue,
-            address: fields.address.stringValue,
-            phone: fields.phone.stringValue,
-            email: fields.email.stringValue,
-            dateSent: Date.now()
-        });
-        try{
-            let reg = await registration.save();
-            console.log(reg);
-        } catch (err){
-            console.log(err);
-        }
-    }
+    
 }

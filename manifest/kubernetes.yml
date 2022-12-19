@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-server-deployment
+  labels:
+    app: chatbotServer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbotServer
+  template:
+    metadata:
+      labels:
+        app: chatbotServer
+    spec:
+      containers:
+      - name: chatbot-server
+        image: tinegaonchari/chatbot-server:latest
+        ports:
+        - containerPort: 8000
+        
+        
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-server-service
+spec:
+  selector:
+    app: chatbot-server 
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  
+
+
+---    
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-client-deployment
+  labels:
+    app: chatbotClient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbotClient
+  template:
+    metadata:
+      labels:
+        app: chatbotClient
+    spec:
+      containers:
+      - name: chatbot-client
+        image: tinegaonchari/chatbot-client:latest
+        ports:
+        - containerPort: 3000
+
+
+---        
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-client-service
+spec:
+  selector:
+    app: chatbot-client
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  
