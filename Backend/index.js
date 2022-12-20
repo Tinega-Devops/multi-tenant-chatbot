@@ -51,6 +51,7 @@ app.use(cors());
 
 require('./routes/dialogFlowRoutes')(app);
 require('./routes/fulfillmentRoutes')(app);
+require('./routes/fulfillmentRouteTwo')(app);
 
 
 

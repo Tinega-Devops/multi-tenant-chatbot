@@ -34,6 +34,21 @@ const sessionPath = sessionClient.projectAgentSessionPath(
             );
         });
     },
+
+    getTokenClient2: async function() {
+        return new Promise((resolve) => {
+            googleAuth.authenticate(
+                {
+                    email: process.env.CLIENT_EMAIL_2,
+                    key:  process.env.PRIVATE_KEY_2,
+                    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+                },
+                (err, token) => {
+                    resolve(token);
+                },
+            );
+        });
+    },
        
     textQuery: async function(text, userID, parameters = {}) {
         let self = module.exports;

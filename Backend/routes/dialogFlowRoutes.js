@@ -18,4 +18,9 @@ module.exports = app => {
         let token = await chatbot.getToken();
         res.send({token});
     })
+
+    app.get('/api/client_token', async (req, res) => {
+        let token = await chatbot.getTokenClient2();
+        res.send({token});
+    })
 }
