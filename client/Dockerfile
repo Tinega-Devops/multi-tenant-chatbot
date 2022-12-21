@@ -1,25 +1,12 @@
-FROM node:14-alpine AS development
-ENV NODE_ENV development
-# Add a work directory
-WORKDIR /app
-# Cache and Install dependencies
-COPY package.json .
-COPY package-lock.json .
-RUN npm install
-# Copy app files
-COPY . .
-# Expose port
-EXPOSE 3000
-# Start the app
-CMD [ "npm", "start" ]
-
-FROM node:16-alpine as builder
+FROM node:14-slim as builder
 # Set the working directory to /app inside the container
 WORKDIR /app
-# Copy app files
+
+COPY ./package.json ./
+
+RUN npm install
+
 COPY . .
-# Install dependencies (npm ci makes sure the exact versions in the lockfile gets installed)
-RUN npm ci 
 # Build the app
 RUN npm run build
 
