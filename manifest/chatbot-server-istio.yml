@@ -1,0 +1,46 @@
+# See more at https://istio.io/blog/2017/0.1-canary/
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: chatbot-server-service
+spec:
+  gateways:
+  - chatbot-gateway 
+  hosts:
+  - chatbot-server-service
+  http:
+  - match:
+    - uri:
+        exact: /
+  - match:
+    - uri:
+        exact: /api
+  - match:
+    - uri:
+        exact: /api-docs
+  - route:
+    - destination:
+        host: chatbot-server-service
+        
+
+---
+# See more at https://istio.io/docs/tasks/traffic-management/circuit-breaking/
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: chatbot-server-service
+spec:
+  host: chatbot-server-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutiveErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
+

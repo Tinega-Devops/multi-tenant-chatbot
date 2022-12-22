@@ -1,0 +1,83 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: chatbot-virtual-service
+  namespace: default 
+spec:
+  gateways:
+  - chatbot-gateway 
+  hosts:
+  - '*'
+  http:
+  - match:
+    - uri:
+        exact: / 
+    route:
+    - destination:
+        host: chatbot-client-service 
+        port:
+          number: 3000 
+
+
+---          
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: chatbot-client-service
+spec:
+  host: chatbot-client-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutiveErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
+
+---
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: chatbot-virtual2-service
+  namespace: default 
+spec:
+  gateways:
+  - chatbot-gateway 
+  hosts:
+  - '*'
+  http:
+  - match:
+    - uri:
+        exact: / 
+    route:
+    - destination:
+        host: chatbot-client2-service 
+        port:
+          number: 3000 
+
+
+---          
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: chatbot-client2-service
+spec:
+  host: chatbot-client2-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutiveErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
