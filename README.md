@@ -46,3 +46,7 @@ To containerize the applications ,navigate to the app folders ,`/Backend` ,`/cli
 Finally to deploy the application on kubernetes navigate to the `/manifest` .At this point i assume you have istio installed locally on your cluster and you have enabled istio automatic injection .If thats not the case you should first of all install and configure sidecar injection for more info on how to do this you check out the [istio documentation](https://istio.io/latest/docs/setup/getting-started/). Via `kubectl cli` .Run the following commands to deploy the application to your local cluster.
 
 `kubectl apply -f kubernetes.yml` to create deployments and services for the application, then `kubectl apply -f istio-gateway.yml `,`kubectl apply -f chabot-client-istio.yml` and `kubectl apply -f chabot-client-istio.yml` to create `istio gateway` and expose the application  then apply `virtual services` & `Destination Rules` for traffic management and `circuit breakers`.
+
+# Documentation
+
+To see documentation of the api used in this project visit this link [Docs](http://localhost:8000/api/docs/#/)

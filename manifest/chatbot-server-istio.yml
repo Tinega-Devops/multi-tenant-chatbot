@@ -38,5 +38,18 @@ spec:
       interval: 1s
       baseEjectionTime: 3m
       maxEjectionPercent: 100       
-
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: chatbot-service-entry
+spec:
+  hosts:
+  - "*"
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http-api
+    protocol: HTTP
+  resolution: NONE
 

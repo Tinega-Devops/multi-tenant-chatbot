@@ -4,6 +4,22 @@ const {WebhookClient} = require('dialogflow-fulfillment');
 
 module.exports = app => {
     app.post('/webhook', async (req, res) => {
+
+/**
+ * @swagger
+ * /webhook:
+ *   post:
+ *      description: Used to get response from dialogflow webhook for the second Agent
+ *      tags:
+ *          - Webhook
+ *      responses:
+ *          '200':
+ *              description: Resource added successfully
+ *          '500':
+ *              description: Internal server error
+ *          '400':
+ *              description: Bad request
+ */
         const agent = new WebhookClient({ request: req, response: res });
 
         const checkout= async(agent)=> {
