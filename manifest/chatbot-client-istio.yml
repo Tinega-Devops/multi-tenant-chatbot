@@ -1,75 +1,55 @@
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: chatbot-virtual-service
-  namespace: default 
+  name: chatbot-virtual-client2
 spec:
-  gateways:
-  - chatbot-gateway 
   hosts:
-  - '*'
+  - "*"
+  gateways:
+  - chatbot-gateway
   http:
   - match:
     - uri:
-        exact: / 
+        prefix: /
     route:
     - destination:
-        host: chatbot-client-service 
+        host: chatbot-client2-service
         port:
-          number: 3000 
+          number: 80
+     
 
-
----          
+--- 
 apiVersion: networking.istio.io/v1alpha3
-kind: DestinationRule
+kind: VirtualService
 metadata:
-  name: chatbot-client-service
+  name: chatbot-virtual-client
 spec:
-  host: chatbot-client-service
-  trafficPolicy:
-    connectionPool:
-      tcp:
-        maxConnections: 1
-      http:
-        http1MaxPendingRequests: 1
-        maxRequestsPerConnection: 1
-    outlierDetection:
-      consecutiveErrors: 1
-      interval: 1s
-      baseEjectionTime: 3m
-      maxEjectionPercent: 100
+  hosts:
+  - "*"
+  gateways:
+  - chatbot-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: chatbot-client-service
+        port:
+          number: 80
+     
 
 ---
 
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: chatbot-virtual2-service
-  namespace: default 
-spec:
-  gateways:
-  - chatbot-gateway 
-  hosts:
-  - '*'
-  http:
-  - match:
-    - uri:
-        exact: / 
-    route:
-    - destination:
-        host: chatbot-client2-service 
-        port:
-          number: 3000 
-
-
----          
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: chatbot-client2-service
+  name: chabot-destination-rule-client
 spec:
-  host: chatbot-client2-service
+  host: chatbot-client-service
   trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
     connectionPool:
       tcp:
         maxConnections: 1
@@ -77,7 +57,30 @@ spec:
         http1MaxPendingRequests: 1
         maxRequestsPerConnection: 1
     outlierDetection:
-      consecutiveErrors: 1
+      consecutive5xxErrors: 1
       interval: 1s
       baseEjectionTime: 3m
-      maxEjectionPercent: 100
+      maxEjectionPercent: 100      
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: chabot-destination-rule-client2
+spec:
+  host: chatbot-client2-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutive5xxErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100    

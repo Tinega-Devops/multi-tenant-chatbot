@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: chatbot-server-deployment
   labels:
-    app: chatbotServer
+    app: chatbot-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chatbotServer
+      app: chatbot-server
   template:
     metadata:
       labels:
-        app: chatbotServer
+        app: chatbot-server
     spec:
       containers:
       - name: chatbot-server
@@ -59,7 +59,7 @@ spec:
       - name: chatbot-client
         image: tinegaonchari/chatbot-client:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 80
 
 
 ---        
@@ -73,8 +73,8 @@ spec:
     app: chatbot-client
   ports:
   - protocol: TCP
-    port: 3000
-    targetPort: 3000
+    port: 80
+    targetPort: 80
    
 ---
 apiVersion: apps/v1
@@ -97,7 +97,7 @@ spec:
       - name: chatbot-client2
         image: tinegaonchari/chatbot-client2:latest
         ports:
-        - containerPort: 3001
+        - containerPort: 80
 
 
 ---        
@@ -111,7 +111,7 @@ spec:
     app: chatbot-client2
   ports:
   - protocol: TCP
-    port: 3001
-    targetPort: 3001
+    port: 80
+    targetPort: 80
   
   
