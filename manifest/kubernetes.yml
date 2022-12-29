@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: chatbot-server
-        image: tinegaonchari/chatbot-server:latest
+        image: tinegaonchari/chatbot-server
         ports:
         - containerPort: 8000
         
